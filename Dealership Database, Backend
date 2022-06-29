@@ -1,0 +1,154 @@
+create database db_project5;
+use db_project5;
+/*
+*admin can add dealership and dealers 
+*dealership can add cars 
+*customer can order car
+*
+*/
+SELECT * FROM admin;
+create table Company(
+company_id int primary key,
+company_name varchar(255) ,
+company_origin varchar(255)
+);
+
+CREATE  TABLE Admin(
+admin_id INT PRIMARY KEY,
+admin_name VARCHAR(255) NOT NULL,
+admin_username VARCHAR(40) UNIQUE NOT NULL,
+admin_password VARCHAR(40) NOT NULL,
+admin_contact int NOT NULL,
+);  
+
+
+CREATE TABLE customer_address(
+street VARCHAR(20) NOT NULL,
+city VARCHAR(20) NOT NULL,
+province VARCHAR(20) NOT NULL,
+country VARCHAR(20) NOT NULL,
+pincode BIGINT NOT NULL,
+customer_id INT FOREIGN KEY REFERENCES customer(customer_id)
+);
+CREATE TABLE dealer_address(
+street VARCHAR(20) NOT NULL,
+city VARCHAR(20) NOT NULL,
+province VARCHAR(20) NOT NULL,
+country VARCHAR(20) NOT NULL,
+pincode BIGINT NOT NULL,
+dealer_id INT FOREIGN KEY REFERENCES Dealer(dealer_id)
+);
+create table Dealership(
+dealership_id int primary key,
+dealership_name varchar(255) ,
+dealership_location varchar(255),
+company_id INT  FOREIGN KEY REFERENCES dbo.Company(company_id)
+);
+DROP TABLE Dealer;
+create table Dealer(
+dealer_id INT  PRIMARY KEY,
+admin_id INT NOT NULL FOREIGN KEY REFERENCES dbo.Admin(admin_id),
+f_name VARCHAR(25) NOT NULL,
+l_name VARCHAR(25) NOT NULL,
+username VARCHAR(25) NOT NULL UNIQUE,
+password VARCHAR(20) NOT NULL,
+contact_number BIGINT NOT NULL UNIQUE,
+Gender VARCHAR(6) CHECK (Gender IN('Male', 'Female', 'Others')) DEFAULT 'Male' 
+);
+DROP TABLE dbo.Dealer;
+
+Create table Car(
+car_id int Identity(1,1) primary key,
+car_name varchar(255),
+dealership_id int foreign key references Dealership(dealership_id),
+);
+create table Car_variant(
+car_id int foreign key references Car(car_id),
+variant_name varchar(255) primary key,
+variant_feature varchar(255),
+variant_price int
+);
+
+create table Customer(
+customer_id int identity(1,1) primary key,
+customer_pboNumber varchar(255),
+customer_name varchar(255),
+customer_cnic varchar(255),
+Gender VARCHAR(6) CHECK (Gender IN('Male', 'Female', 'Others')) DEFAULT 'Male' 
+);
+Create table Booking(
+booking_id int identity(1,1) primary key,
+customer_id int foreign key references customer(customer_id) ,
+dealer_id int foreign key references dealer(dealer_id),
+car_id int foreign key references car(car_id),
+booking_date date,
+tentative_date date,
+booking_amount INT CHECK(booking_amount>=200000)
+);
+Create table Payment(
+payment_id int identity(1,1) primary key,
+customer_id int foreign key references customer(customer_id),
+final_payment INT ,
+booking_id int foreign key references booking(booking_id)
+);
+
+create table historyAdmin(
+admin_id int foreign key references admin(admin_id),
+last_login DATETIME NOT NULL,
+);
+create table historyDealer(
+dealer_id int foreign key references Dealer(dealer_id),
+last_login DATETIME NOT NULL,
+);
+create table paymentHistory(
+payment_id INT FOREIGN KEY REFERENCES dbo.Payment(payment_id),
+customer_id int foreign key references customer(customer_id),
+payment_price int,
+payment_dateTime datetime not null);
+
+SELECT * FROM dbo.Car;
+SELECT * FROM dbo.Dealership;
+SELECT * FROM dbo.Admin;
+SELECT * FROM dbo.dealer_address;
+SELECT * FROM dbo.Car where dealership_id = (SELECT dealership_id FROM dbo.Dealership WHERE dealership_name = 'Kathy38' );
+
+
+CREATE PROCEDURE GetCustomersByIdAndPBO
+@customer_id int , 
+@customer_pboNumber varchar(255)
+AS
+BEGIN
+	SELECT customer_name , customer_id , customer_pboNumber FROM dbo.Customer WHERE
+		customer_id = customer_id AND customer_pboNumber = customer_pboNumber
+END
+
+CREATE PROCEDURE insertToCars 
+       @Car_ID                      int  = NULL   , 
+       @car_name                  varchar(25)      = NULL   , 
+       @dealership_id              int  = NULL   
+       
+AS 
+BEGIN 
+     SET NOCOUNT ON 
+
+     INSERT INTO dbo.Car
+     (
+         car_name,
+         dealership_id
+     )
+     VALUES
+     (   'Ferrari', -- car_name - varchar(255)
+         25  -- dealership_id - int
+         )
+       
+    
+
+END 
+
+cREATE PROCEDURE GetBookingsByDate
+@booking_date datetime
+AS
+BEGIN
+	SELECT booking_id , customer_id , booking_amount FROM dbo.Booking WHERE
+		booking_date = SYSDATETIME()
+END
